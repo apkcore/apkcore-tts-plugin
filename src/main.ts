@@ -6,18 +6,16 @@ import {
 } from 'obsidian';
 import {
 	DEFAULT_SETTINGS,
-	MyPluginSettings,
-	SampleSettingTab,
+	ApkcoreTtsSettings,
+	ApkcoreTtsSettingTab,
 } from './settings';
 import { EdgeTtsClient } from './edgetts/client';
 import { AudioPlayer } from './edgetts/audio-player';
 import { BrowserTtsClient } from './edgetts/browser-tts';
 import { testEdgeTTSConnection } from './edgetts/test';
 
-// Remember to rename these classes and interfaces!
-
-export default class MyPlugin extends Plugin {
-	settings!: MyPluginSettings;
+export default class ApkcoreTtsPlugin extends Plugin {
+	settings!: ApkcoreTtsSettings;
 	private ttsClient!: EdgeTtsClient;
 	private audioPlayer!: AudioPlayer;
 	private browserTts!: BrowserTtsClient;
@@ -43,7 +41,6 @@ export default class MyPlugin extends Plugin {
 			id: 'tts-read-selection',
 			name: '朗读文本',
 			icon: 'volume-2',
-			hotkeys: [{ modifiers: ['Ctrl'], key: 'r' }], // 默认快捷键 Ctrl+R
 			editorCallback: async (editor: Editor) => {
 				const selection = editor.getSelection();
 				if (selection) {
@@ -74,7 +71,6 @@ export default class MyPlugin extends Plugin {
 			id: 'tts-stop',
 			name: '停止朗读',
 			icon: 'square',
-			hotkeys: [{ modifiers: ['Ctrl', 'Shift'], key: 'S' }], // 默认快捷键 Ctrl+Shift+S
 			callback: () => {
 				this.stopReading();
 			},
@@ -84,7 +80,6 @@ export default class MyPlugin extends Plugin {
 			id: 'tts-pause-resume',
 			name: '暂停/继续朗读',
 			icon: 'pause',
-			hotkeys: [{ modifiers: ['Ctrl'], key: 'p' }], // 默认快捷键 Ctrl+P (可能冲突，用户可自定义)
 			callback: () => {
 				if (this.useBrowserTts) {
 					const state = this.browserTts.getState();
@@ -172,7 +167,7 @@ export default class MyPlugin extends Plugin {
 		);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new ApkcoreTtsSettingTab(this.app, this));
 	}
 
 	onunload() {
@@ -186,7 +181,7 @@ export default class MyPlugin extends Plugin {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<MyPluginSettings>,
+			(await this.loadData()) as Partial<ApkcoreTtsSettings>,
 		);
 	}
 
@@ -247,44 +242,13 @@ export default class MyPlugin extends Plugin {
 	private showFloatingStopButton(): void {
 		if (this.floatingStopButton) return; // 已存在，不重复创建
 
-		// 创建悬浮按钮容器
-		this.floatingStopButton = document.body.createDiv('tts-floating-stop-button');
-		this.floatingStopButton.style.cssText = `
-			position: fixed;
-			bottom: 80px;
-			right: 30px;
-			z-index: 1000;
-			background: var(--interactive-accent);
-			color: white;
-			border: none;
-			border-radius: 50%;
-			width: 60px;
-			height: 60px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			cursor: pointer;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-			transition: all 0.3s ease;
-			font-size: 24px;
-		`;
+		// 创建悬浮按钮容器，使用 CSS 类而不是直接设置样式
+		const doc = activeDocument;
+		this.floatingStopButton = doc.body.createDiv('tts-floating-stop-button');
 
-		// 添加图标
-		this.floatingStopButton.innerHTML = '⏹️';
+		// 使用 setIcon 或文本内容
+		this.floatingStopButton.setText('⏹️');
 		this.floatingStopButton.setAttribute('aria-label', '停止朗读');
-
-		// 鼠标悬停效果
-		this.floatingStopButton.addEventListener('mouseenter', () => {
-			if (this.floatingStopButton) {
-				this.floatingStopButton.style.transform = 'scale(1.1)';
-			}
-		});
-
-		this.floatingStopButton.addEventListener('mouseleave', () => {
-			if (this.floatingStopButton) {
-				this.floatingStopButton.style.transform = 'scale(1)';
-			}
-		});
 
 		// 点击事件
 		this.floatingStopButton.addEventListener('click', () => {

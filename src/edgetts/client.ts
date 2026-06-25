@@ -25,15 +25,16 @@ export class EdgeTtsClient {
    * @returns MP3 音频数据
    */
   async synthesize(text: string, options: SynthesisOptions): Promise<ArrayBuffer> {
-    return new Promise(async (resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-      this.audioChunks = [];
+    this.audioChunks = [];
 
-      try {
-        // 生成连接 URL
-        const url = await this.generateConnectionUrl();
-        console.log('EdgeTTS connecting to:', url.substring(0, 100) + '...');
+    try {
+      // 生成连接 URL
+      const url = await this.generateConnectionUrl();
+      console.log('EdgeTTS connecting to:', url.substring(0, 100) + '...');
+
+      return new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
 
         // 创建 WebSocket 连接
         this.ws = new WebSocket(url);
@@ -69,11 +70,14 @@ export class EdgeTtsClient {
           }
           this.cleanup();
         });
+      });
 
-      } catch (error) {
-        this.handleError(error as Error);
+    } catch (error) {
+      if (this.reject) {
+        this.reject(error as Error);
       }
-    });
+      throw error;
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 {
 	"id": "apkcore-tts",
 	"name": "Apkcore TTS",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.0.0",
 	"description": "Text-to-speech plugin with browser TTS and EdgeTTS support.",
 	"author": "Apkcore",

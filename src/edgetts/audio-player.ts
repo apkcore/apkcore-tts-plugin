@@ -58,7 +58,9 @@ export class AudioPlayer {
    */
   resume(): void {
     if (this.audio && this.state === 'paused') {
-      this.audio.play();
+      this.audio.play().catch((err) => {
+        console.error('Resume playback failed:', err);
+      });
       this.state = 'playing';
     }
   }

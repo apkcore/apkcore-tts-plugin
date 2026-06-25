@@ -13,7 +13,7 @@ export class BrowserTtsClient {
 
   constructor() {
     // 预加载语音列表
-    this.loadVoices();
+    void this.loadVoices();
   }
 
   /**
@@ -41,7 +41,7 @@ export class BrowserTtsClient {
    * 合成并播放语音
    */
   async speak(text: string, options?: { rate?: number; voice?: string }): Promise<void> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       try {
         // 检查浏览器是否支持 Web Speech API
         if (!('speechSynthesis' in window)) {
@@ -63,19 +63,21 @@ export class BrowserTtsClient {
           this.utterance.rate = Math.max(0.5, Math.min(2, normalizedRate));
         }
 
-        // 等待语音列表加载完成
-        const voices = await this.loadVoices();
+        // 加载语音列表
+        void this.loadVoices().then(voices => {
+          if (!this.utterance) return;
 
-        // 尝试设置中文语音
-        const chineseVoice = voices.find(v =>
-          v.lang.startsWith('zh') || v.lang.startsWith('cmn')
-        );
-        if (chineseVoice) {
-          this.utterance.voice = chineseVoice;
-          console.log('使用语音:', chineseVoice.name, '语言:', chineseVoice.lang);
-        } else {
-          console.warn('未找到中文语音，可用语音:', voices.map(v => `${v.name} (${v.lang})`).join(', '));
-        }
+          // 尝试设置中文语音
+          const chineseVoice = voices.find(v =>
+            v.lang.startsWith('zh') || v.lang.startsWith('cmn')
+          );
+          if (chineseVoice) {
+            this.utterance.voice = chineseVoice;
+            console.log('使用语音:', chineseVoice.name, '语言:', chineseVoice.lang);
+          } else {
+            console.warn('未找到中文语音，可用语音:', voices.map(v => `${v.name} (${v.lang})`).join(', '));
+          }
+        });
 
         // 监听事件
         this.utterance.onstart = () => {
@@ -101,7 +103,8 @@ export class BrowserTtsClient {
 
           // 真正的错误才报告
           console.error('语音合成错误:', event);
-          reject(new Error(`语音合成失败: ${event.error}`));
+          const error = new Error(`语音合成失败: ${event.error}`);
+          reject(error);
         };
 
         // 开始播放
@@ -110,7 +113,7 @@ export class BrowserTtsClient {
 
       } catch (error) {
         this.state = 'idle';
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }

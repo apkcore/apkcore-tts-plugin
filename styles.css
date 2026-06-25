@@ -1,8 +1,26 @@
-/*
+/* Apkcore TTS Plugin Styles */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Floating stop button */
+.tts-floating-stop-button {
+	position: fixed;
+	bottom: 80px;
+	right: 30px;
+	z-index: 1000;
+	background: var(--interactive-accent);
+	color: white;
+	border: none;
+	border-radius: 50%;
+	width: 60px;
+	height: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	transition: all 0.3s ease;
+	font-size: 24px;
+}
 
-If your plugin does not need CSS, delete this file.
-
-*/
+.tts-floating-stop-button:hover {
+	transform: scale(1.1);
+}

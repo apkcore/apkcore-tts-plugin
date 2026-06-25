@@ -1,6 +1,6 @@
 {
 	"name": "apkcore-tts",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Text-to-speech plugin for Obsidian with browser TTS and EdgeTTS support",
 	"main": "main.js",
 	"type": "module",

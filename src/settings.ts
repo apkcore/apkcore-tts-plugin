@@ -1,9 +1,9 @@
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
-import MyPlugin from './main';
+import { App, PluginSettingTab, Setting } from 'obsidian';
+import ApkcoreTtsPlugin from './main';
 import { getChineseVoices, formatVoiceName } from './edgetts/voice-list';
 import { EdgeVoice } from './edgetts/types';
 
-export interface MyPluginSettings {
+export interface ApkcoreTtsSettings {
 	mySetting: string;
 	edgeTts: {
 		voice: string;
@@ -13,7 +13,7 @@ export interface MyPluginSettings {
 	};
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
+export const DEFAULT_SETTINGS: ApkcoreTtsSettings = {
 	mySetting: 'default',
 	edgeTts: {
 		voice: 'zh-CN-XiaoxiaoNeural',  // 默认女声
@@ -23,17 +23,17 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	},
 };
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class ApkcoreTtsSettingTab extends PluginSettingTab {
+	plugin: ApkcoreTtsPlugin;
 	private voiceList: EdgeVoice[] = [];
 	private voiceDropdown: Setting | null = null;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: ApkcoreTtsPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
-	async display(): Promise<void> {
+	display(): void {
 		const { containerEl } = this;
 
 		containerEl.empty();
@@ -51,8 +51,8 @@ export class SampleSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		// EdgeTTS 设置
-		containerEl.createEl('h2', { text: 'EdgeTTS 设置' });
+		// EdgeTTS 设置标题
+		new Setting(containerEl).setName('EdgeTTS 设置').setHeading();
 
 		// 语音选择下拉框（动态加载）
 		const voiceSetting = new Setting(containerEl)
@@ -62,7 +62,7 @@ export class SampleSettingTab extends PluginSettingTab {
 		this.voiceDropdown = voiceSetting;
 
 		// 异步加载语音列表
-		this.loadVoiceList(voiceSetting);
+		void this.loadVoiceList(voiceSetting);
 
 		// 语速滑块
 		new Setting(containerEl)
@@ -71,7 +71,6 @@ export class SampleSettingTab extends PluginSettingTab {
 			.addSlider((slider) => slider
 				.setLimits(-50, 100, 10)
 				.setValue(this.plugin.settings.edgeTts.rate)
-				.setDynamicTooltip()
 				.onChange(async (value) => {
 					this.plugin.settings.edgeTts.rate = value;
 					await this.plugin.saveSettings();
