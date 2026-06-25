@@ -1,92 +1,101 @@
-# Obsidian Sample Plugin
+# Apkcore TTS Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+A text-to-speech plugin for Obsidian that supports both browser native TTS and Microsoft Edge TTS.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+- 🎙️ **Dual TTS Engine Support**
+  - Browser native TTS (Web Speech API)
+  - Microsoft Edge TTS (WebSocket-based)
+- 🌏 **Rich Chinese Voice Support**
+  - Dynamic voice list from Microsoft Edge TTS API
+  - Multiple Chinese voices with different personalities
+- ⚡ **Easy to Use**
+  - Read selected text or entire document
+  - Floating stop button during playback
+  - Keyboard shortcuts support
+  - Right-click context menu
+- 🎛️ **Customizable**
+  - Adjustable speech rate
+  - Voice selection
+  - Maximum text length limit
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and outputs a Notice on click.
-- Registers a global interval which logs 'setInterval' to the console.
+## Usage
 
-## First time developing plugins?
+### Basic Operations
 
-Quick starting guide for new plugin devs:
+1. **Read Selected Text**: Select text and use one of the following methods:
+   - Right-click → "🔊 Read Selected Text"
+   - Command palette → "Read Text"
+   - Keyboard shortcut: `Ctrl+R` (customizable)
+   - Click the ribbon icon
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `src/main.ts` to `main.js`.
-- Make changes to `src/main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+2. **Read Entire Document**: Without selecting text, use the same methods to read the full document
 
-## Releasing new releases
+3. **Stop Reading**: 
+   - Click the floating stop button
+   - Use "Stop Reading" command
+   - Keyboard shortcut: `Ctrl+Shift+S` (customizable)
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+4. **Pause/Resume**: 
+   - Use "Pause/Resume Reading" command
+   - Keyboard shortcut: `Ctrl+P` (customizable)
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+5. **Switch TTS Engine**: Use "Switch TTS Engine" command to toggle between Browser TTS and Edge TTS
 
-## Adding your plugin to the community plugin list
+### Settings
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+Open Settings → Apkcore TTS to configure:
 
-## How to use
+- **Voice**: Select from available Chinese voices (automatically loaded from Edge TTS API)
+- **Speech Rate**: Adjust reading speed (-50% to +100%)
+- **Max Text Length**: Limit single playback text length (default 1800 characters)
 
-- Clone this repo.
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `npm i` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## Installation
 
-## Manually installing the plugin
+### From Obsidian Community Plugins
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+1. Open Obsidian Settings
+2. Go to Community Plugins → Browse
+3. Search for "Apkcore TTS"
+4. Click Install, then Enable
 
-## Improve code quality with eslint
+### Manual Installation
 
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/apkcore/apkcore-tts-plugin/releases)
+2. Create a folder `YourVault/.obsidian/plugins/apkcore-tts/`
+3. Copy the downloaded files into this folder
+4. Reload Obsidian
+5. Enable the plugin in Settings → Community Plugins
 
-## Funding URL
+## Requirements
 
-You can include funding URLs where people who use your plugin can financially support it.
+- Obsidian v1.0.0 or higher
+- For Edge TTS: Internet connection to access Microsoft Edge TTS API
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Development
 
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
+```bash
+# Install dependencies
+npm install
+
+# Build for production
+npm run build
+
+# Build for development (watch mode)
+npm run dev
 ```
 
-If you have multiple URLs, you can also do:
+## Support
 
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
-```
+If you encounter any issues or have suggestions, please [open an issue](https://github.com/apkcore/apkcore-tts-plugin/issues).
 
-## API Documentation
+## License
 
-See https://docs.obsidian.md
+MIT
+
+## Acknowledgments
+
+- Built with [Obsidian Plugin Template](https://github.com/obsidianmd/obsidian-sample-plugin)
+- Uses Microsoft Edge TTS API
+- Uses Web Speech API
