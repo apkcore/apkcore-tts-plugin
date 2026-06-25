@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EdgeTTS WebSocket 测试</title>
+</head>
+<body>
+    <h1>EdgeTTS WebSocket 连接测试</h1>
+    <button onclick="testConnection()">测试连接</button>
+    <button onclick="testSynthesize()">测试合成</button>
+    <pre id="log"></pre>
+
+    <script>
+        const log = document.getElementById('log');
+
+        function appendLog(msg) {
+            log.textContent += new Date().toLocaleTimeString() + ': ' + msg + '\n';
+            console.log(msg);
+        }
+
+        // 复制签名生成函数
+        async function generateSecMsGec() {
+            const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+            const WINDOWS_EPOCH_OFFSET = 11644473600;
+            const SEC_MS_GEC_INTERVAL = 300;
+            const FILE_TIME_TICK_MULTIPLIER = 10000000;
+
+            const currentUnixTime = Math.floor(Date.now() / 1000);
+            const windowsEpoch = currentUnixTime + WINDOWS_EPOCH_OFFSET;
+            const roundedTime = Math.floor(windowsEpoch / SEC_MS_GEC_INTERVAL) * SEC_MS_GEC_INTERVAL;
+            const fileTicks = roundedTime * FILE_TIME_TICK_MULTIPLIER;
+
+            const message = fileTicks.toString() + TRUSTED_CLIENT_TOKEN;
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            return hashHex.toUpperCase();
+        }
+
+        function generateUUID() {
+            return crypto.randomUUID().replace(/-/g, '');
+        }
+
+        async function testConnection() {
+            log.textContent = '';
+            appendLog('开始测试连接...');
+
+            try {
+                const connectionId = generateUUID();
+                const secMsGec = await generateSecMsGec();
+
+                appendLog('ConnectionId: ' + connectionId);
+                appendLog('Sec-MS-GEC: ' + secMsGec);
+
+                const params = new URLSearchParams({
+                    'TrustedClientToken': '6A5AA1D4EAFF4E9FB37E23D68491D6F4',
+                    'ConnectionId': connectionId,
+                    'Sec-MS-GEC': secMsGec,
+                    'Sec-MS-GEC-Version': '1-143.0.3650.75'
+                });
+
+                const url = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?${params.toString()}`;
+                appendLog('连接 URL: ' + url.substring(0, 120) + '...');
+
+                const ws = new WebSocket(url);
+                ws.binaryType = 'arraybuffer';
+
+                ws.addEventListener('open', () => {
+                    appendLog('✅ WebSocket 连接成功！');
+                    ws.close();
+                });
+
+                ws.addEventListener('error', (e) => {
+                    appendLog('❌ WebSocket 错误: ' + e);
+                });
+
+                ws.addEventListener('close', (e) => {
+                    appendLog(`WebSocket 关闭: ${e.code} ${e.reason || '(无原因)'}`);
+                });
+
+            } catch (error) {
+                appendLog('❌ 错误: ' + error.message);
+            }
+        }
+
+        async function testSynthesize() {
+            log.textContent = '';
+            appendLog('开始测试语音合成...');
+
+            try {
+                const connectionId = generateUUID();
+                const secMsGec = await generateSecMsGec();
+
+                const params = new URLSearchParams({
+                    'TrustedClientToken': '6A5AA1D4EAFF4E9FB37E23D68491D6F4',
+                    'ConnectionId': connectionId,
+                    'Sec-MS-GEC': secMsGec,
+                    'Sec-MS-GEC-Version': '1-143.0.3650.75'
+                });
+
+                const url = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?${params.toString()}`;
+                appendLog('连接中...');
+
+                const ws = new WebSocket(url);
+                ws.binaryType = 'arraybuffer';
+                let audioChunks = [];
+
+                ws.addEventListener('open', () => {
+                    appendLog('✅ 连接成功，发送配置...');
+
+                    // 发送配置
+                    const timestamp = new Date().toUTCString().replace(/GMT/, 'GMT+0000 (Coordinated Universal Time)');
+                    const configJson = JSON.stringify({
+                        context: {
+                            synthesis: {
+                                audio: {
+                                    metadataoptions: {
+                                        sentenceBoundaryEnabled: 'false',
+                                        wordBoundaryEnabled: 'false'
+                                    },
+                                    outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
+                                }
+                            }
+                        }
+                    });
+
+                    const configMsg = `X-Timestamp:${timestamp}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n${configJson}`;
+                    ws.send(configMsg);
+                    appendLog('已发送配置消息');
+
+                    // 发送 SSML
+                    const requestId = generateUUID();
+                    const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='zh-CN'><voice name='zh-CN-XiaoxiaoNeural'><prosody pitch='+0Hz' rate='+0%' volume='+0%'>你好，这是一个测试。</prosody></voice></speak>`;
+                    const ssmlMsg = `X-RequestId:${requestId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${timestamp}Z\r\nPath:ssml\r\n\r\n${ssml}`;
+                    ws.send(ssmlMsg);
+                    appendLog('已发送 SSML 请求');
+                });
+
+                ws.addEventListener('message', (event) => {
+                    if (typeof event.data === 'string') {
+                        appendLog('收到文本消息: ' + event.data.substring(0, 100));
+                        if (event.data.includes('Path:turn.end')) {
+                            appendLog('✅ 收到结束信号');
+                            appendLog(`总共收到 ${audioChunks.length} 个音频块`);
+                            ws.close();
+                        }
+                    } else {
+                        appendLog('收到二进制消息，大小: ' + event.data.byteLength + ' 字节');
+                        audioChunks.push(event.data);
+                    }
+                });
+
+                ws.addEventListener('error', (e) => {
+                    appendLog('❌ WebSocket 错误');
+                });
+
+                ws.addEventListener('close', (e) => {
+                    appendLog(`连接关闭: ${e.code} ${e.reason || '(无原因)'}`);
+                });
+
+            } catch (error) {
+                appendLog('❌ 错误: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
